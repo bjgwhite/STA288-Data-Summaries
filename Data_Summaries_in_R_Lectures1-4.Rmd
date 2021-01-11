@@ -1,0 +1,331 @@
+---
+title: "Data Summaries (R Code from Lectures 1-4)"
+author: "B White"
+date: "January 2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(mosaic)
+```
+
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk as follows. The code in this the grey box below imports the dataset we were using for Lectures 1-3 into R and saves the data set in an R object called "body_dat". 
+
+Knitting this file runs all the R code in this document and generates a document. You can run and view the output of each R code chunk right in this window by clicking on the run (or the triangle) button on the top right corner of the R chunk as well. Note that you may need to run earlier R code chunks in order to ensure the current one runs. For instance, you need to run the R code chunk with the library() commands above for the following code to run. The library() commands open packages that are needed to run the functions in the following code. 
+
+```{r}
+body_dat<-read_csv("body.csv")
+glimpse(body_dat)
+attach(body_dat)
+```
+
+You will use R Markdown documents like this to complete your STA288 lab assignments and your project report this term.
+
+Please see below for the code that reproduces all the data summaries we discussed in the first few lectures for the body measurements dataset for "individuals in their twenties and thirties, with a  scattering of older men and women, all exercising several hours a week." Data Source: http://ww2.amstat.org/publications/jse/jse_data_archive.htm
+
+
+## Summarizing Distributions of one Quantiative variable
+
+Histograms of heights:
+```{r}
+hist(height,main="Height (cm) of 507 Adults")
+hist(height,main="Height (cm) of 507 Adults",breaks=5)
+hist(height,main="Height (cm) of 507 Adults",breaks=20)
+```
+
+Dotplot & Stemplot of heights:
+```{r}
+dotPlot(height,nint=50000,xlab="height",ylab="Frequency",main="Heights (cm) of 507 Adults")
+stem(height,scale=2)
+```
+
+
+Mean & Median of heights:
+```{r}
+mean(height)
+median(height)
+```
+
+Standard deviation and range of heights:
+```{r}
+sd(height)
+range(height)
+min<-min(height)
+max<-max(height)
+range(height)[2]-range(height)[1]
+
+```
+
+5# Summary (and mean) & Boxplot of heights:
+```{r}
+summary(height)
+boxplot(height, main="Height (cm) of 507 Adults")
+```
+
+## Comparing distributions of a quantitative variable across groups
+
+Histograms of heights for males and females on same scale:
+```{r}
+min<-min(height)
+max<-max(height)
+par(mfrow=c(2,1))
+hist(height[sex==0],main="Height (cm) of Females",xlim=c(min,max),xlab="height")
+hist(height[sex==1],main="Height (cm) of Males",xlim=c(min,max),xlab="height")
+
+```
+
+Side-by-side boxplot and Stripplot of height for males/females:
+
+```{r}
+boxplot(height~sex,names=c("female","male"),ylab="Height (cm)",xlab="Sex",
+        main="Height (cm) by Sex")
+
+stripchart(height~sex,main="Height (cm) by Sex",vertical=TRUE,pch=1)
+
+```
+
+Numerical summaries of heights for males and females:
+```{r}
+# This is called a comment - whatever text follows an # in an R code chunk is not
+# run but this is a good way to document code. We could change the 0 and 1 codes 
+# for female and male in R.
+
+sex = ifelse(sex==1, "male", "female")
+
+summary(height[sex=="female"])
+sd(height[sex=="female"])
+
+summary(height[sex=="male"])
+sd(height[sex=="male"])
+
+
+```
+
+## BMI example
+
+Compute BMI from measurements:
+```{r}
+bmi<-round(weight/(height/100)^2,1)
+```
+
+Distributions of waist girth and BMI:
+```{r}
+hist(bmi,main="Computed BMIs for 507 Adults")
+
+# 2.54 cm per inch
+waist_in<-waist/2.54
+hist(waist_in,main="Waist Circumference (in) for 507 Adults",xlab="Circumference (in)")
+
+```
+
+## Association between two quantitative variables
+
+Scatterplot of BMI versus waist circumference and correlation:
+
+```{r}
+plot(waist_in,bmi,main="BMI vs Waist Circumference (in) for 507 Adults")
+cor(waist_in,bmi)
+```
+
+## Association between two quantitative variables (including a categorical variable)
+
+Scatterplot of BMI versus waist circumference and correlation with groups based on a categorical variable:
+```{r}
+plot(waist_in[sex=="female"],bmi[sex=="female"],
+     main="BMI vs Waist Circumference (in) for 507 Adults",
+     xlab="Waist Circumference (in)", ylab="BMI",
+     xlim=c(min(waist_in),max(waist_in)),ylim=c(min(bmi),max(bmi)),col="red", pch=3)
+points(waist_in[sex=="male"],bmi[sex=="male"],col="blue", pch=1)
+legend("topleft",c("female","male"),col=c("red","blue"),pch=c(3,1))
+
+cor(waist_in[sex=="female"],bmi[sex=="female"])
+cor(waist_in[sex=="male"],bmi[sex=="male"])
+
+```
+
+
+## Distribution of a qualitative (categorical) variable
+
+Barplot and piechart:
+```{r}
+# first define BMI categories
+bmi_class<-rep(0,length(bmi))
+bmi_class[bmi<18.5]<-1
+bmi_class[bmi>18.4&bmi<25]<-2
+bmi_class[bmi>24.9&bmi<30]<-3
+bmi_class[bmi>29.9&bmi<35]<-4
+bmi_class[bmi>34.9&bmi<40]<-5
+bmi_class[bmi>39.9]<-6
+
+barplot(table(bmi_class),ylab="Frequency",names=c("underweight","normal","overweight",
+                                                  "obese I","obese II"), 
+                                                  main="BMI Classifications for 507 Adults")
+
+pie(table(bmi_class),labels=c("underweight","normal","overweight","obese I","obese II"), 
+                              main="BMI Classifications for 507
+    Adults",cex=0.8,cex.main=0.8)
+
+```
+
+
+Frequencies (counts) of BMI classifications of the 507 adults studied:
+```{r}
+table(bmi_class)
+```
+
+Relative frequencies (proportions) of BMI classifications of the 507 adults studied:
+```{r}
+prop.table(table(bmi_class))
+```
+
+Proportion of the 507 adults who were overweight or obese:
+```{r}
+mean(bmi_class>2)
+```
+
+
+
+## Association between two qualitative (categorical) variables
+
+Enter table of counts of STEM postsecondary degrees of men and women in 2011 (Statistics Canada):
+```{r}
+dat<-as.table(cbind(c(80,25,20),c(60,100,50)))
+colnames(dat)<-c("women","men")
+rownames(dat)<-c("Sci & Tech", "Eng","Math & CS")
+
+dat
+
+```
+
+Joint distribution (proportions) of two categorical variables:
+```{r}
+prop.table(dat)
+
+barplot(prop.table(dat))
+
+barplot(prop.table(dat),beside=FALSE,legend=FALSE,cex.lab=0.7,col=2:4,ylab="Proportion")
+legend("topleft",legend=c("Sci & Tech", "Eng","Math & CS"),cex=0.75,fill=2:4)
+
+barplot(prop.table(dat),beside=TRUE,legend=FALSE,cex.lab=0.7,col=2:4,ylab="Proportion")
+legend("top",legend=c("Sci & Tech", "Eng","Math & CS"),cex=0.75,fill=2:4)
+
+```
+
+
+Marginal distributions (proportions) of each of the two categorical variables:
+```{r}
+barplot(prop.table(c(140,125,70)),names=c("Science & Tech","Engineering", 
+                                          "Math & CS"),main="STEM Field of Grads in 2011")
+
+barplot(prop.table(c(125,210)),names=c("Women","Men"),main="Grads in 2011")
+
+```
+
+
+## Conditional distributions (proportions) 
+
+
+Conditional distribution of field given gender (margin=2 in code considers the columns, here women and men, separately when computing proportions):
+```{r}
+
+prop.table(dat,margin=2)
+
+barplot(prop.table(dat,margin=2),beside=FALSE,legend=FALSE,cex.lab=0.7,col=2:4,
+        ylab="Proportion")
+legend("topleft",legend=c("Sci & Tech","Eng", "Math & CS"),cex=0.85,fill=2:4)
+
+barplot(prop.table(dat,margin=2),beside=TRUE,legend=FALSE,cex.lab=0.7,col=2:4,
+        ylab="Proportion")
+legend("top",legend=c("Sci & Tech","Eng", "Math & CS"),cex=0.85,fill=2:4)
+
+```
+
+
+Conditional distribution of gender given field (margin=1 in code considers the rows, here the 3 fields, separately when computing proportions):
+```{r}
+prop.table(dat,margin=1)
+
+barplot(t(prop.table(dat,margin=1)),beside=FALSE,legend=FALSE,cex.lab=0.7,col=3:4,
+        ylab="Proportion")
+legend("topleft",legend=c("women","men"),cex=0.85,fill=3:4)
+
+barplot(t(prop.table(dat,margin=1)),beside=TRUE,legend=FALSE,cex.lab=0.7,col=3:4,
+        ylab="Proportion")
+legend("top",legend=c("women","men"),cex=0.85,fill=3:4)
+
+```
+
+
+Mosaic plot:
+```{r}
+
+mosaicplot(t(dat),col=c("blue","orange","grey"),main="Degree Completion in 2011",
+           ylab="STEM Field",cex=0.7)
+
+mosaicplot(dat,col=c("blue","orange","grey"),
+           main="Degree Completion in 2011",ylab="Gender",cex=0.7)
+
+```
+
+
+
+## HPV Vaccination data
+
+Enter table of counts of HPV Infection data (Gibbs & Goossens, 2013):
+```{r}
+HPVdat<-as.table(cbind(c(23,345),c(6140,5673)))
+colnames(HPVdat)<-c("Yes","No")
+rownames(HPVdat)<-c("HPV", "Hep A")
+
+HPVdat
+
+```
+
+```{r}
+mosaicplot(t(HPVdat),col=c("blue","orange"),main=
+             "Vaccination Type by HPV Infection",ylab="Vaccination Type",cex=0.7)
+
+mosaicplot(HPVdat,col=c("red","blue"),main=
+             "HPV Infections by Vaccination Type",ylab="HPV?",cex=0.7)
+
+barplot(t(prop.table(HPVdat,margin=1)),beside=FALSE,legend=FALSE,cex.lab=0.7,col=3:4,
+        ylab="Proportion")
+legend("topleft",legend=c("HPV+","HPV-"),cex=0.85,fill=3:4)
+
+```
+
+Relative risk (RR) and Odds Ratios (OR):
+
+```{r}
+
+prop.table(HPVdat,margin=1)
+
+library(epitools)
+epitab(HPVdat,method="riskratio")$tab
+epitab(HPVdat,method="oddsratio")$tab
+
+# make the HepA vaccine group the reference group
+
+NewHPVdat<-as.table(rbind(c(5673,345),c(6140, 23)))
+colnames(NewHPVdat)<-c("No","Yes")
+rownames(NewHPVdat)<-c("Hep A", "HPV")
+
+NewHPVdat
+
+prop.table(NewHPVdat,margin=1)
+epitab(NewHPVdat,method="riskratio")$tab
+epitab(NewHPVdat,method="oddsratio")$tab
+
+```
+
+
